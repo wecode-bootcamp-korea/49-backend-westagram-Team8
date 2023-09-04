@@ -84,9 +84,10 @@ INSERT INTO users(
   email
 )
 VALUES (
-  'HanSohee',
-  'Sohee1128',
-  'sohee@email.com'
+ 
+  "${name1}",
+  "${password1}", 
+  "${email1}"
 )
 `)
 
