@@ -1,5 +1,3 @@
-// Assignment 2 - 유저 회원가입하기
-
 const http = require('http')
 const express = require('express')
 const { DataSource } = require('typeorm');
@@ -19,14 +17,11 @@ app.use(express.json()) // for parsing application/json
 
 app.get("/", async(req, res) => {
   try {
-    return res.status(200).json({
-      "message" : "Welcome to KJ's Server!!"
-    })
-  } catch(err) {
+    return res.status(200).json({"message": "Welcome to KJ's server!"})
+  } catch (err) {
     console.log(err)
   }
 })
-
 
 //1. API 로 users 화면에 보여주기
 app.get('/users', async(req, res) => {
@@ -34,7 +29,7 @@ app.get('/users', async(req, res) => {
     // query DB with SQL
     // Database Source 변수를 가져오고.
     // SELECT id, name, password FROM users;
-    const userData = await myDataSource.query(`SELECT id, name, email, password FROM users`)
+    const userData = await myDataSource.query(`SELECT id, name, email FROM users`)
 
     // console 출력
 
@@ -49,37 +44,46 @@ app.get('/users', async(req, res) => {
 		console.log(error)
 	}
 })
-
-
 //2. users 생성
 
-app.post('/users', async(req, res) => {
-  try {
-    const {body} = req;
+app.post("/users", async(req, res) => {
+	try {
+    // 1. user 정보를 frontend로부터 받는다. (프론트가 사용자 정보를 가지고, 요청을 보낸다) 
+    const me = req.body
 
-    console.log("body:", body);
+    // 2. user 정보 console.log로 확인 한 번!
+    console.log("ME: ", me)
 
-    const {name} = body;
-    const {password} = body;
-    const {email} = body;
+    // 3. DATABASE 정보 저장.
 
+    const name2 = me.name
+    const password2 = me.password
+    const email2 = me.email
 
     const userData = await myDataSource.query(`
-    INSERT INTO uesrs(name, password, email)
-    VALUES(${name}, ${password}, ${email})
+      INSERT INTO users (
+        name, 
+        password,
+        email
+      )
+      VALUES (
+        '${name2}',
+        '${password2}', 
+        '${email2}'
+      )
     `)
 
-    console.log('inserted user id', userData)  //  insertId는 뭐지?
+    // 4. DB data 저장 여부 확인
+    console.log('iserted user id', userData.insertId)
 
-    return res.status(201).json( {
-      "message": "user created!"
-    })
-
-  } catch(err) {
-    console.log(err);
-  }
+    // 5. send response to FRONTEND
+		return res.status(201).json({
+      "message": "userCreated" 
+		})
+	} catch (err) {
+		console.log(err)
+	}
 })
-
 
 
 // 과제 3 DELETE 
