@@ -1,7 +1,7 @@
 const http = require('http')
 const express = require('express')
 const app = express()
-
+const cors = require('cors')
 const dotenv = require("dotenv")
 dotenv.config()
 
@@ -30,7 +30,7 @@ myDataSource.initialize()
     console.log("Data Source has been initialized!")
   });
 
-
+app.use(cors())
 app.use(express.json())
 
 app.get('/', async (req, res) => {
@@ -94,28 +94,29 @@ error.statusCode = 400
 throw error
 }
 
-// >> 2-1. password에 특수문자가 없을 때
+// >> 2-1. password에 특수문자가 없을 때 
+// if(){}
+
+// 
 
 // >> 3. email이 중복일때
 
 const existingUser = await myDataSource.query(`
 SELECT id, email FROM users WHERE email='${email}';
 `)
-
+// const object = existingUser.length
 console.log('existing user: ', existingUser)
 
-//>>> *email이 같은 유저가 나온다
+//>>> *email이 같은 유저가 나온다 ----- 에러
 
-if(existingUser){
+if( existingUser.length !== 0){
   const error = new Error("Duplicated Email")
   error.statusCode = 400
   throw error
   }
 
-  //>>> *email이 다른 유저가 나온다
-else if(existingUser.length === 0){
- console .log('existing user: ', existingUser.length )
-}
+  //>>> *email이 같은 유저가 없다 ----- 정상
+
 
 
 const userData = await myDataSource.query(`
