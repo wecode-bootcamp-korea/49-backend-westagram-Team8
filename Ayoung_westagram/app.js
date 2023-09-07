@@ -57,8 +57,8 @@ app.get('/users', async (req, res) => {
     return res.status(200).json({
       "users": userData
     })
-  } catch (error){
-    console. log(error)
+  } catch (error) {
+    console.log(error)
   }
 })
 
@@ -66,60 +66,60 @@ app.get('/users', async (req, res) => {
 
 app.post('/users', async (req, res) => {
 
-try {
-  // 1) user 정보를 frontend로부터 받는다.
-const me = req.body
-// 2) user 정보 console.log로 확인 한 번!
-console .log("ME", me)
-// 3) DATABASE 정보 저장
-// const name1 = me.name
-// const password1 = me.password
-// const email1 = me.email
+  try {
+    // 1) user 정보를 frontend로부터 받는다.
+    const me = req.body
+    // 2) user 정보 console.log로 확인 한 번!
+    console.log("ME", me)
+    // 3) DATABASE 정보 저장
+    // const name1 = me.name
+    // const password1 = me.password
+    // const email1 = me.email
 
-const {name, password, email} = me
-//error 핸들링
+    const { name, password, email } = me
+    //error 핸들링
 
 
-// >> 1. email,name,password가 없을 때
-if (email === undefined || name === undefined || password === undefined) {
-  const error = new Error("KEY_ERROR")
-  error.statusCode = 400
-  throw error
-}
+    // >> 1. email,name,password가 없을 때
+    if (email === undefined || name === undefined || password === undefined) {
+      const error = new Error("KEY_ERROR")
+      error.statusCode = 400
+      throw error
+    }
 
-// >> 2. password가 짧을 때
-if(password.length < 8 ){
-const error = new Error("Invaild Password")
-error.statusCode = 400
-throw error
-}
+    // >> 2. password가 짧을 때
+    if (password.length < 8) {
+      const error = new Error("Invaild Password")
+      error.statusCode = 400
+      throw error
+    }
 
-// >> 2-1. password에 특수문자가 없을 때 
-// if(){}
+    // >> 2-1. password에 특수문자가 없을 때 
+    // if(){}
 
-// 
+    // 
 
-// >> 3. email이 중복일때
+    // >> 3. email이 중복일때
 
-const existingUser = await myDataSource.query(`
+    const existingUser = await myDataSource.query(`
 SELECT id, email FROM users WHERE email='${email}';
 `)
-// const object = existingUser.length
-console.log('existing user: ', existingUser)
+    // const object = existingUser.length
+    console.log('existing user: ', existingUser)
 
-//>>> *email이 같은 유저가 나온다 ----- 에러
+    //>>> *email이 같은 유저가 나온다 ----- 에러
 
-if( existingUser.length !== 0){
-  const error = new Error("Duplicated Email")
-  error.statusCode = 400
-  throw error
-  }
-
-  //>>> *email이 같은 유저가 없다 ----- 정상
+    if (existingUser.length !== 0) {
+      const error = new Error("Duplicated Email")
+      error.statusCode = 400
+      throw error
+    }
 
 
 
-const userData = await myDataSource.query(`
+
+
+    const userData = await myDataSource.query(`
 INSERT INTO users(
   name,
   password,
@@ -133,55 +133,76 @@ VALUES (
 )
 `)
 
-// 4) 데이터 저장 여부
+    // 4) 데이터 저장 여부
 
-console.log('iserted user id', userData.insertId)
+    console.log('iserted user id', userData.insertId)
 
-// 5) 프론트 반응
+    // 5) 프론트 반응
 
-return res.status(201).json({
-  "message" : "useCreated"
+    return res.status(201).json({
+      "message": "useCreated"
+    })
+
+
+
+  } catch (error) {
+    console.log(error)
+  }
+
+
 })
 
 
+// >>>>> 로그인
 
-} catch(error){
-  console. log(error)
-}
+app.post('/login', async (req, res) => {
+  try {
 
+    const userEmail = req.body.email
+    console.log("email: ", userEmail)
+    const userPassword = req.body.password
+    console.log("Password: ", userPassword)
+    const { email, password } = req.body //  구조분해할당
+    //STEP 1.keyerror 확인
 
+    if (email === undefined || password === undefined) {
+      const error = new Error("KEY ERROR")
+      error.statusCode = 400
+      throw error
+    }
+
+    //STEP 2.email 가진 사람이 있는 지 확인
+
+    const loginUserEmail = await myDataSource.query(`
+    SELECT id, email FROM users WHERE email='${email}';
+    `)
+    if (loginUserEmail.length === 0) {
+      const error = new Error("NOT EMAIL")
+      error.statusCode = 400
+      throw error
+    }
+
+    //STEP 3.password 비교
+
+    const loginUserPassword = await myDataSource.query(`
+    SELECT id, email FROM users WHERE password='${password}';
+    `)
+    if (loginUserPassword == false) {
+      const error = new Error("NOT PASSWORD")
+      error.statusCode = 400
+      throw error
+    }
+    return res.status(201).json({
+      "message": "WELCOME!"
+    })
+
+  } catch (error) {
+    console.log(error)
+  }
 })
 
 
-//로그인
-
-// app.post("/login", async(req,res) => {
-// try{
-
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-//   return res.status(200).json({
-//     "message" : "LOGIN_SUCCESS",
-//     "accessToken" : token
-
-//   })
-// } catch(error){
-// console .log(error)
-// }
-
-// })
-
-
-
+// >>>>> 토큰
 
 
 
@@ -205,7 +226,7 @@ const server = http.createServer(app) // express app 으로 서버를 만듭니�
 const start = async () => { // 서버를 시작하는 함수입니다.
   try {
     server.listen(8000, () => console.log(`Server is listening on 8000`))
-  } catch (err) { 
+  } catch (err) {
     console.error(err)
   }
 }
