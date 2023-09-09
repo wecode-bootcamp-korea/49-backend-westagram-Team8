@@ -2,10 +2,12 @@ const http = require('http')
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const jwt = require("jsonwebtoken")
 const dotenv = require("dotenv")
 dotenv.config()
 
 const { DataSource } = require('typeorm');
+const { userInfo } = require('os')
 
 const myDataSource = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
@@ -85,6 +87,8 @@ app.post('/users', async (req, res) => {
       const error = new Error("KEY_ERROR")
       error.statusCode = 400
       throw error
+      console.log(error)
+
     }
 
     // >> 2. password가 짧을 때
@@ -92,6 +96,7 @@ app.post('/users', async (req, res) => {
       const error = new Error("Invaild Password")
       error.statusCode = 400
       throw error
+      console.log(error)
     }
 
     // >> 2-1. password에 특수문자가 없을 때 
@@ -113,25 +118,24 @@ SELECT id, email FROM users WHERE email='${email}';
       const error = new Error("Duplicated Email")
       error.statusCode = 400
       throw error
+      console.log(error)
     }
 
 
-
-
-
     const userData = await myDataSource.query(`
-INSERT INTO users(
-  name,
-  password,
-  email
-)
-VALUES (
- 
-  "${name}",
-  "${password}", 
-  "${email}"
-)
-`)
+    INSERT INTO users(
+      name,
+      password,
+      email
+    )
+    VALUES (
+     
+      "${name}",
+      "${password}", 
+      "${email}"
+    )
+    `)
+
 
     // 4) 데이터 저장 여부
 
@@ -147,6 +151,7 @@ VALUES (
 
   } catch (error) {
     console.log(error)
+    res.status(401).json({ message: '회원가입 실패' })
   }
 
 
@@ -158,51 +163,86 @@ VALUES (
 app.post('/login', async (req, res) => {
   try {
 
-    const userEmail = req.body.email
-    console.log("email: ", userEmail)
-    const userPassword = req.body.password
-    console.log("Password: ", userPassword)
-    const { email, password } = req.body //  구조분해할당
+    // const userEmail = req.body.email
+    // console.log("email: ", userEmail)
+    // const userPassword = req.body.password
+    // console.log("password: ", userPassword)
+    // const { email, password } = req.body //  구조분해할당
+
+    const loginUser = req.body
+    console.log("loginUser", loginUser)
+    console.log("typeof", typeof loginUser)
+    const { email, password } = loginUser
+
+
     //STEP 1.keyerror 확인
 
     if (email === undefined || password === undefined) {
       const error = new Error("KEY ERROR")
       error.statusCode = 400
       throw error
+      console.log(error)
     }
 
     //STEP 2.email 가진 사람이 있는 지 확인
 
     const loginUserEmail = await myDataSource.query(`
-    SELECT id, email FROM users WHERE email='${email}';
+    SELECT id, email password FROM users WHERE email='${email}';
     `)
     if (loginUserEmail.length === 0) {
       const error = new Error("NOT EMAIL")
       error.statusCode = 400
       throw error
+      console.log(error)
     }
 
     //STEP 3.password 비교
 
     const loginUserPassword = await myDataSource.query(`
-    SELECT id, email FROM users WHERE password='${password}';
+    SELECT id, email password FROM users WHERE password='${password}';
     `)
     if (loginUserPassword == false) {
       const error = new Error("NOT PASSWORD")
       error.statusCode = 400
       throw error
+      console.log(error)
     }
-    return res.status(201).json({
-      "message": "WELCOME!"
+
+    //STEP 4.토큰생성
+
+    const userId = loginUser;
+    console.log("userId", userId)
+    console.log("user id type of", typeof userId)
+
+    const token = jwt.sign({userid: loginUser}, "secretKey");
+    console.log('JWT Token:', token);
+
+
+
+
+
+
+
+
+
+    return res.status(200).json({
+      "message": "WELCOME!",
+      "accessToken" : "token"
     })
+
+
+
+
 
   } catch (error) {
     console.log(error)
+    res.status(401).json({ message: '로그인 실패' })
   }
 })
 
 
-// >>>>> 토큰
+
+
 
 
 
@@ -226,8 +266,8 @@ const server = http.createServer(app) // express app 으로 서버를 만듭니�
 const start = async () => { // 서버를 시작하는 함수입니다.
   try {
     server.listen(8000, () => console.log(`Server is listening on 8000`))
-  } catch (err) {
-    console.error(err)
+  } catch (error) {
+    console.error(error)
   }
 }
 
